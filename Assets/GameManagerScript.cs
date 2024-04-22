@@ -1,88 +1,149 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-
-
 
 public class GameManagerScript : MonoBehaviour
 {
-    //配列の宣言
-    int[] map;
+    public GameObject playerPrefab;
 
-    void PrintArray()
-    {
-        string debugText = "";
-        for (int i = 0; i < map.Length; i++)
-        {
-            debugText += map[i].ToString() + ";";
-        }
-        Debug.Log(debugText);
+    int[,] map;
 
-    }
+    GameObject[,] field;
 
     // Start is called before the first frame update
+
+    //void PrintArray()
+    //{
+    //    string debugText = "";
+    //    for (int i = 0; i < map.Length; i++)
+    //    {
+    //        debugText += map[i].ToString() + ",";
+    //    }
+    //    Debug.Log(debugText);
+    //}
+
+    private Vector2Int GetPlayerIndex()
+    {
+        for (int y = 0; y < field.GetLength(0); y++)
+        {
+            for(int x=0; x<field.GetLength(1); x++)
+            {
+                if (field[y,x].tag == "Player")
+                {
+                    return new Vector2Int(x,y);
+                }
+            }
+        }
+        return new Vector2Int(-1,-1);
+    }
+
     void Start()
     {
-        //デバッグログの出力
-       map = new int[] { 0, 0, 0, 1, 0, 2, 0, 0, 0 };
-       
-
-        PrintArray();
-    }
-
-    int GetPlayerIndex()
-    {
-        for (int i = 0; i < map.Length; i++)
+        //マップ設定
+        map = new int[,]
         {
-            if (map[i] == 1)
+            {1,0,0,0,0},
+            {0,0,0,0,0},
+            {0,0,0,0,0},
+        };
+        //フィールドサイズ決定
+        field = new GameObject[
+            map.GetLength(0),
+            map.GetLength(1)
+            ];
+
+
+        for (int y = 0; y < map.GetLength(0); y++)
+        {
+            for (int x = 0; x < map.GetLength(1); x++)
             {
-                return i;
+                if (map[y,x]==1)
+                {
+                    field[y,x] = Instantiate(
+                        playerPrefab,
+                        new Vector3(x,map.GetLength(0)-1-y,0),
+                        Quaternion.identity
+                    );
+                }
             }
         }
-        return -1;
-    }
 
-    bool MoveNumber(int number,int moveFrom,int moveTo)
-    {
-        //移動先が範囲外なら移動不可
-        if(moveTo<0||moveTo>=map.Length)
-        {
-            return false;
-        }
-        //移動先に２がいたら
-        if (map[moveTo]==2)
-        {
-            //どの方向に移動するか算出
-            int velocity=moveTo-moveFrom;
-            //プレイヤーの移動先からさらに先に２を移動する
-            //箱の移動処理。MoveNumberメソッド内でMoveNumberメソッドを
-            //呼び、処理を再帰している。移動可不可boolで記録
-            bool success = MoveNumber(2, moveTo, moveTo + velocity);
-            //もし箱が移動失敗したら、プレイヤーの移動も失敗
-            if(!success) { return false; }
-        }
-        //プレイヤー・箱関わらずの移動処理
-        map[moveTo] = number;
-        map[moveFrom] = 0;
-        return true;
-    }
+        string debugTXT = "";
 
-    // Update is called once per frame
-    void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.RightArrow))
+        for (int y=0;y<map.GetLength(0);y++)
         {
-            int playerIndex = GetPlayerIndex();
-
-            if(playerIndex<map.Length-1)
+            for(int x=0;x<map.GetLength(1);x++)
             {
-                map[playerIndex + 1] = 1;
-                map[playerIndex] = 0;
+                debugTXT += map[y, x].ToString() + ",";
             }
-
-            MoveNumber(1,playerIndex,playerIndex+1);
-            PrintArray() ;
+            debugTXT += "\n";
         }
+        Debug.Log(debugTXT);
     }
+
+    //bool MoveNumber(string number, Vector2Int moveFrom, Vector2Int moveTo)
+    //{
+    //    if (moveTo.y < 0 || moveTo.y >= field.GetLength(0))
+    //    {
+    //        return false;
+    //    }
+    //    if(moveTo.x<0||moveTo.x >= field.GetLength(1))
+    //    {
+    //        return false;
+    //    }
+
+
+        //移動先に箱があったら
+        //if (field[moveTo] == 2)
+        //{
+        //    int velocity = moveTo - moveFrom;
+        //    bool success = MoveNumber(2, moveTo, moveTo + velocity);
+        //    if (success == false)
+        //    {
+        //        return false;
+        //    }
+        //}
+
+        ////移動
+        //field[moveTo] = number;
+        //field[moveFrom] = 0;
+        //return true;
+    //}
+
+    //// Update is called once per frame
+    //void Update()
+    //{
+
+    //    if (Input.GetKeyDown(KeyCode.RightArrow))
+    //    {
+    //        int playerIndex = GetPlayerIndex();
+
+    //        MoveNumber(1, playerIndex, playerIndex + 1);
+    //        PrintArray();
+
+    //        string debugText = "";
+    //        for (int i = 0; i < map.Length; i++)
+    //        {
+    //            debugText += map[i].ToString() + ",";
+    //        }
+    //        Debug.Log(debugText);
+    //    }
+
+
+    //    if (Input.GetKeyDown(KeyCode.LeftArrow))
+    //    {
+    //        int playerIndex = GetPlayerIndex();
+
+    //        MoveNumber(1, playerIndex, playerIndex - 1);
+    //        PrintArray();
+
+    //        string debugText = "";
+    //        for (int i = 0; i < map.Length; i++)
+    //        {
+    //            debugText += map[i].ToString() + ",";
+    //        }
+    //        Debug.Log(debugText);
+    //    }
+
+    //}
 }
