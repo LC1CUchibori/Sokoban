@@ -1,11 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 public class GameManagerScript : MonoBehaviour
 {
     public GameObject playerPrefab;
     public GameObject boxPrefab;
+    public GameObject GoalPrefab;
+    public GameObject ParticlePrefab;
+    public GameObject clearText;
 
     int[,] map;
 
@@ -23,32 +27,21 @@ public class GameManagerScript : MonoBehaviour
     //    Debug.Log(debugText);
     //}
 
-    private Vector2Int GetPlayerIndex()
-    {
-        for (int y = 0; y < field.GetLength(0); y++)
-        {
-            for(int x=0; x<field.GetLength(1); x++)
-            {
-                if (field[y, x] == null) { continue; }
-                if (field[y,x].tag == "Player")
-                {
-                    return new Vector2Int(x,y);
-                }
-            }
-        }
-        return new Vector2Int(-1,-1);
-    }
+    
 
     void Start()
     {
+        Screen.SetResolution(1280, 720, false);
+
         //マップ設定
         map = new int[,]
         {
-            {1,0,0,0,0},
-            {0,2,0,0,0},
-            {0,0,0,0,0},
-            {0,0,0,3,0},
-            {0,0,0,0,0}
+            {0,0,0,0,0,0,0},
+            {0,0,3,1,3,0,0},
+            {0,0,0,2,0,0,0},
+            {0,0,2,3,2,0,0},
+            {0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0}
         };
 
         //フィールドサイズ決定
@@ -76,6 +69,12 @@ public class GameManagerScript : MonoBehaviour
                         boxPrefab, 
                         new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
                 }
+                if (map[y, x] == 3)
+                {
+                    field[y, x] = Instantiate(
+                        GoalPrefab,
+                       new Vector3(x, map.GetLength(0) - y, 0), Quaternion.identity);
+                }
             }
         }
 
@@ -90,6 +89,35 @@ public class GameManagerScript : MonoBehaviour
             debugTXT += "\n";
         }
         Debug.Log(debugTXT);
+    }
+
+    private Vector2Int GetPlayerIndex()
+    {
+        for (int y = 0; y < field.GetLength(0); y++)
+        {
+            for (int x = 0; x < field.GetLength(1); x++)
+            {
+                if (field[y, x] == null) { continue; }
+                if (field[y, x].tag == "Player")
+                {
+                    return new Vector2Int(x, y);
+                }
+            }
+        }
+        return new Vector2Int(-1, -1);
+    }
+
+    void SpawnParticle(Vector3 position)
+    {
+        for (int y = 0; y < map.GetLength(0); y++)
+        {
+            for (int x = 0; x < map.GetLength(1); x++)
+            {
+                field[y, x] = Instantiate
+                    (ParticlePrefab,
+                    position, Quaternion.identity);
+            }
+        }
     }
 
     bool IsCleard()
@@ -127,7 +155,7 @@ public class GameManagerScript : MonoBehaviour
         {
             Vector2Int velocity = moveTo - moveFrom;
             bool success = MoveNumber(moveTo, moveTo + velocity);
-            if (success) {return false;}
+            if (!success) { return false; }
         }
 
         //移動先に箱があったら
@@ -142,10 +170,19 @@ public class GameManagerScript : MonoBehaviour
         //}
 
         //移動
-        field[moveTo.y,moveTo.x] = field[moveFrom.y,moveFrom.x];
-        field[moveFrom.y, moveFrom.x].transform.position =
-            new Vector3(moveTo.x, map.GetLength(0) - moveTo.y, 0);
+        Vector3 moveToPosition = new Vector3(
+            moveTo.x, map.GetLength(0) - moveTo.y, 0
+            );
+        field[moveTo.y, moveTo.x] = field[moveFrom.y, moveFrom.x];
+        field[moveFrom.y, moveFrom.x].GetComponent<Move>().MoveTo(moveToPosition);
         field[moveFrom.y, moveFrom.x] = null;
+
+        // プレイヤーの移動後にパーティクルを生成
+        if (field[moveTo.y, moveTo.x].tag == "Player")
+        {
+            SpawnParticle(moveToPosition);
+        }
+
         return true;
     }
 
@@ -179,7 +216,7 @@ public class GameManagerScript : MonoBehaviour
         //もしクリアしたら
         if (IsCleard())
         {
-            Debug.Log("Clear");
+            clearText.SetActive(true);
         }
     }
 }
