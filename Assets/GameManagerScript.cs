@@ -113,7 +113,7 @@ public class GameManagerScript : MonoBehaviour
         {
             for (int x = 0; x < map.GetLength(1); x++)
             {
-                field[y, x] = Instantiate
+               Instantiate
                     (ParticlePrefab,
                     position, Quaternion.identity);
             }
